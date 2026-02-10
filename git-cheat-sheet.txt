@@ -1,0 +1,1 @@
+show: inspect commit; log: see history; checkout: switch or undo; init: start repo; reset: unstage or revert 
