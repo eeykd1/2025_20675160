@@ -1,0 +1,20 @@
+# Ignore build folders
+build/
+build_OLD/
+bin/
+obj/
+
+# Ignore IDE specific files
+.qtcreator/
+*.user
+.vs/
+.vscode/
+ipch/
+*.suo
+*.db
+
+# Ignore compiled files
+*.obj
+*.exe
+*.pdb
+*.ilk
