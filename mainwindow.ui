@@ -25,6 +25,16 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <widget class="QVTKOpenGLNativeWidget" name="openGLWidget">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>391</width>
+           <height>501</height>
+          </rect>
+         </property>
+        </widget>
        </widget>
       </item>
       <item>
@@ -125,6 +135,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVTKOpenGLNativeWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>qvtkopenglnativewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="icons.qrc"/>
  </resources>

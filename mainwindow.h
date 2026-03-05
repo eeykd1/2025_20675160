@@ -7,6 +7,15 @@
 #include "ModelPartList.h"
 #include "optiondialog.h"
 
+// --- NEW: VTK Includes for the 3D Cylinder ---
+#include <vtkSmartPointer.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkRenderer.h>
+#include <vtkCylinderSource.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkActor.h>
+#include <QVTKOpenGLNativeWidget.h> // Required for the UI widget
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -38,6 +47,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
     ModelPartList* partList;
+
+    // --- NEW: VTK 3D Engine Variables ---
+    // These act as the "eyes" and the "screen" for your 3D view
+    vtkSmartPointer<vtkRenderer> renderer;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow;
 };
 
 #endif // MAINWINDOW_H

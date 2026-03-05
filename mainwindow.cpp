@@ -3,7 +3,7 @@
 #include "ModelPart.h"
 #include "ModelPartList.h"
 #include <QFileDialog>
-#include <QFileInfo>      // Needed to turn long file paths into short names
+#include <QFileInfo>
 #include "optiondialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -11,6 +11,39 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    // --- NEW: VTK 3D CYLINDER SETUP (Exercise 3) ---
+
+    // 1. Create the Renderer (The Eyes)
+    renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderer->SetBackground(0.1, 0.2, 0.4); // Dark blue background
+
+    // 2. Create the Render Window (The Bridge)
+    renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    renderWindow->AddRenderer(renderer);
+
+    // 3. Link to the UI widget (Make sure objectName is 'openGLWidget' in Designer)
+    ui->openGLWidget->setRenderWindow(renderWindow);
+
+    // 4. Create the Cylinder Shape
+    vtkSmartPointer<vtkCylinderSource> cylinderSource = vtkSmartPointer<vtkCylinderSource>::New();
+    cylinderSource->SetRadius(5.0);
+    cylinderSource->SetHeight(10.0);
+    cylinderSource->SetResolution(100);
+
+    // 5. Create Mapper and Actor
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(cylinderSource->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    // 6. Add to scene and refresh
+    renderer->AddActor(actor);
+    renderer->ResetCamera();
+    renderWindow->Render();
+
+    // --- YOUR ORIGINAL TREE SETUP ---
 
     // Make the columns in the tree view fit the text automatically
     ui->treeView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -31,13 +64,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     for (int i = 0; i < 3; i++) {
         QString name = QString("TopLevel %1").arg(i);
-        // Create top-level items with "false" visibility string
         ModelPart* childItem = new ModelPart({ name, "false" });
         rootItem->appendChild(childItem);
 
         for (int j = 0; j < 5; j++) {
             QString subName = QString("Item %1,%2").arg(i).arg(j);
-            // Create sub-items with "false" visibility string
             ModelPart* childChildItem = new ModelPart({ subName, "false" });
             childItem->appendChild(childChildItem);
         }
@@ -50,18 +81,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// --- YOUR ORIGINAL FUNCTIONS (UNCHANGED) ---
+
 void MainWindow::handleTreeClicked(const QModelIndex &index)
 {
-    // Simple status bar message when you click an item
     ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
     QString partName = selectedPart->data(0).toString();
     ui->statusbar->showMessage("Clicked: " + partName, 2000);
 }
 
-// --- OPEN FILE: ADDS NEW ITEMS TO THE TREE ---
 void MainWindow::on_actionOpen_File_triggered()
 {
-    // Filter allows you to see STL, Text, or All Files (*.*)
     QString fileName = QFileDialog::getOpenFileName(
         this,
         tr("Open File"),
@@ -72,26 +102,23 @@ void MainWindow::on_actionOpen_File_triggered()
     if (!fileName.isEmpty()) {
         QFileInfo fileInfo(fileName);
         QString shortName = fileInfo.fileName();
+        QModelIndex currentIndex = ui->treeView->currentIndex();
+        this->partList->appendChild(currentIndex, { shortName, "false" });
 
-        // Add the new file to the root level of the tree
-        QModelIndex parentIndex; // Empty index means add to the top level
-        this->partList->appendChild(parentIndex, { shortName, "false" });
-
-        ui->statusbar->showMessage("Added: " + shortName, 3000);
+        if (currentIndex.isValid()) {
+            ui->treeView->expand(currentIndex);
+        }
+        ui->statusbar->showMessage("Added " + shortName + " to tree.", 3000);
     }
 }
 
-// --- ITEM OPTIONS: UPDATES NAME, VISIBILITY, AND RGB ---
 void MainWindow::on_actionItem_Options_triggered() {
     QModelIndex index = ui->treeView->currentIndex();
 
     if (index.isValid()) {
-        // 1. Get the actual ModelPart object we clicked on
         ModelPart* selectedPart = static_cast<ModelPart*>(index.internalPointer());
-
         OptionDialog dialog(this);
 
-        // 2. PRE-FILL: Pull existing data from the part into the dialog
         QString currentName = selectedPart->data(0).toString();
         bool currentVisible = (selectedPart->data(1).toString() == "true");
 
@@ -103,20 +130,16 @@ void MainWindow::on_actionItem_Options_triggered() {
             selectedPart->getColourB()
             );
 
-        // 3. SHOW DIALOG: Wait for user to click OK
         if (dialog.exec() == QDialog::Accepted) {
             QString newName = dialog.getName();
             bool isVisible = dialog.isVisibleChecked();
             QString visibleString = isVisible ? "true" : "false";
 
-            // 4. SAVE DATA: Put the new name and true/false into the table columns
             this->partList->setData(index.siblingAtColumn(0), newName, Qt::EditRole);
             this->partList->setData(index.siblingAtColumn(1), visibleString, Qt::EditRole);
 
-            // 5. SAVE RGB: Store the color values inside the ModelPart object memory
             selectedPart->setColour(dialog.getR(), dialog.getG(), dialog.getB());
 
-            // 6. REFRESH: Tell the tree to redraw these specific cells immediately
             QModelIndex left = index.siblingAtColumn(0);
             QModelIndex right = index.siblingAtColumn(1);
             emit partList->dataChanged(left, right);
@@ -128,7 +151,6 @@ void MainWindow::on_actionItem_Options_triggered() {
     }
 }
 
-// Button Handlers
 void MainWindow::handleButton1() { /* Placeholder */ }
 void MainWindow::handleButton2() { on_actionItem_Options_triggered(); }
 void MainWindow::handleButton3() { /* Placeholder */ }
