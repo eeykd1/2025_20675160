@@ -3,6 +3,9 @@ project(Worksheet6App LANGUAGES CXX)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
+# --- NEW: Step 1 - Tell CMake to find the VTK 3D engine ---
+find_package(VTK REQUIRED)
+
 qt_standard_project_setup()
 
 # This section tells the computer which files make up your app
@@ -24,6 +27,8 @@ target_link_libraries(Worksheet6App
     PRIVATE
         Qt::Core
         Qt::Widgets
+        # --- NEW: Step 2 - "Glue" the VTK tools to your app ---
+        ${VTK_LIBRARIES}
 )
 
 include(GNUInstallDirs)
@@ -40,3 +45,10 @@ qt_generate_deploy_app_script(
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
 install(SCRIPT ${deploy_script})
+
+# --- NEW: Step 3 - Copy VR controller settings to your build folder ---
+# This ensures the "vrbindings" folder is in the right place for the VR headset.
+add_custom_target(VRBindings)
+add_custom_command(TARGET VRBindings PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E
+  copy_directory ${CMAKE_SOURCE_DIR}/vrbindings ${CMAKE_BINARY_DIR}/vrbindings)
