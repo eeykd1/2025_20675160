@@ -13,21 +13,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // 1. Setup VTK with Blue Background
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
     ui->vtkWidget->setRenderWindow(renderWindow);
     renderWindow->AddRenderer(renderer);
     renderer->SetBackground(0.2, 0.5, 0.9);
 
-    // 2. Setup TreeView
     treeModel = new QStandardItemModel(this);
     ui->treeView->setModel(treeModel);
     ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->treeView, &QTreeView::customContextMenuRequested, this, &MainWindow::showContextMenu);
 
-    // 3. SET BUTTON TEXT VIA CODE
-    // This ensures your buttons don't just say "PushButton"
     ui->pushButton_Open->setText("Open STL");
     ui->pushButton_Edit->setText("Edit Properties");
     ui->pushButton_Remove->setText("Remove Item");
@@ -37,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() { delete ui; }
 
-// --- FAR LEFT BUTTON: OPEN FILE ---
 void MainWindow::on_pushButton_Open_clicked() {
     on_actionOpen_triggered();
 }
@@ -46,6 +41,7 @@ void MainWindow::on_actionOpen_triggered() {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open STL"), "", tr("STL Files (*.stl)"));
     if (fileName.isEmpty()) return;
 
+    // VTK Loading Logic
     auto reader = vtkSmartPointer<vtkSTLReader>::New();
     reader->SetFileName(fileName.toUtf8().constData());
     reader->Update();
@@ -60,15 +56,29 @@ void MainWindow::on_actionOpen_triggered() {
     renderer->ResetCamera();
     renderWindow->Render();
 
+    // UI List Logic
     QFileInfo info(fileName);
-    QStandardItem* item = new QStandardItem(info.fileName());
+    QStandardItem* newItem = new QStandardItem(info.fileName());
 
+    // Store actor pointer
     QVariant v = QVariant::fromValue((void*)actor.GetPointer());
-    item->setData(v, Qt::UserRole);
-    treeModel->appendRow(item);
+    newItem->setData(v, Qt::UserRole);
+
+    // --- PARENT-CHILD LOGIC ---
+    // Check if there is already an item in the list
+    if (treeModel->rowCount() > 0) {
+        // Get the very first item we ever added
+        QStandardItem* firstItem = treeModel->item(0);
+        // Add this new file as a CHILD of the first one
+        firstItem->appendRow(newItem);
+        // Expand the list so you can see the child
+        ui->treeView->expandAll();
+    } else {
+        // If the list is empty, this is the first item (the Parent)
+        treeModel->appendRow(newItem);
+    }
 }
 
-// --- MIDDLE BUTTON: EDIT PROPERTIES ---
 void MainWindow::on_pushButton_Edit_clicked() {
     QModelIndex index = ui->treeView->currentIndex();
     if (!index.isValid()) return;
@@ -85,7 +95,6 @@ void MainWindow::on_pushButton_Edit_clicked() {
     }
 }
 
-// --- FAR RIGHT BUTTON: REMOVE ITEM ---
 void MainWindow::on_pushButton_Remove_clicked() {
     QModelIndex index = ui->treeView->currentIndex();
     if (!index.isValid()) return;
@@ -95,7 +104,8 @@ void MainWindow::on_pushButton_Remove_clicked() {
 
     if (actor) {
         renderer->RemoveActor(actor);
-        treeModel->removeRow(index.row());
+        // Use the model to remove the row correctly even if it's a child
+        treeModel->removeRow(index.row(), index.parent());
         renderWindow->Render();
     }
 }
