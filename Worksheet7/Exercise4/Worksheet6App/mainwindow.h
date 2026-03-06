@@ -23,11 +23,9 @@ public:
 private slots:
     void on_actionOpen_triggered();
     void showContextMenu(const QPoint &pos);
-
-    // NEW BUTTON SLOTS
-    void on_pushButton_Open_clicked();   // Far Left
-    void on_pushButton_Edit_clicked();   // Middle
-    void on_pushButton_Remove_clicked(); // Far Right
+    void on_pushButton_Open_clicked();
+    void on_pushButton_Edit_clicked();
+    void on_pushButton_Remove_clicked();
 
 private:
     Ui::MainWindow *ui;

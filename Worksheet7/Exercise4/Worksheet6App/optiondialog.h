@@ -14,11 +14,12 @@ public:
     explicit OptionDialog(QWidget *parent = nullptr);
     ~OptionDialog();
 
-    // Receives the actor and the current name from MainWindow
     void setActorData(vtkActor* actor, QString name);
 
+    // ADDED: This lets MainWindow "get" the new name from the dialog
+    QString getName() const;
+
 private slots:
-    // This runs when you click the "OK" button
     void on_buttonBox_accepted();
 
 private:

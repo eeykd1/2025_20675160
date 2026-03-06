@@ -19,7 +19,6 @@ public:
     ModelPart* parentItem();
     int row() const;
 
-    // Colour storage and retrieval
     void setColour(unsigned char R, unsigned char G, unsigned char B);
     unsigned char getColourR() const { return colourR; }
     unsigned char getColourG() const { return colourG; }

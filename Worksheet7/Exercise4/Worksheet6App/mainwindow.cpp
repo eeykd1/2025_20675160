@@ -41,7 +41,6 @@ void MainWindow::on_actionOpen_triggered() {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open STL"), "", tr("STL Files (*.stl)"));
     if (fileName.isEmpty()) return;
 
-    // VTK Loading Logic
     auto reader = vtkSmartPointer<vtkSTLReader>::New();
     reader->SetFileName(fileName.toUtf8().constData());
     reader->Update();
@@ -56,25 +55,16 @@ void MainWindow::on_actionOpen_triggered() {
     renderer->ResetCamera();
     renderWindow->Render();
 
-    // UI List Logic
     QFileInfo info(fileName);
     QStandardItem* newItem = new QStandardItem(info.fileName());
-
-    // Store actor pointer
     QVariant v = QVariant::fromValue((void*)actor.GetPointer());
     newItem->setData(v, Qt::UserRole);
 
-    // --- PARENT-CHILD LOGIC ---
-    // Check if there is already an item in the list
     if (treeModel->rowCount() > 0) {
-        // Get the very first item we ever added
         QStandardItem* firstItem = treeModel->item(0);
-        // Add this new file as a CHILD of the first one
         firstItem->appendRow(newItem);
-        // Expand the list so you can see the child
         ui->treeView->expandAll();
     } else {
-        // If the list is empty, this is the first item (the Parent)
         treeModel->appendRow(newItem);
     }
 }
@@ -90,6 +80,8 @@ void MainWindow::on_pushButton_Edit_clicked() {
         OptionDialog dialog(this);
         dialog.setActorData(actor, item->text());
         if (dialog.exec() == QDialog::Accepted) {
+            // UPDATED: This line now updates the text in your tree view list
+            item->setText(dialog.getName());
             renderWindow->Render();
         }
     }
@@ -104,7 +96,6 @@ void MainWindow::on_pushButton_Remove_clicked() {
 
     if (actor) {
         renderer->RemoveActor(actor);
-        // Use the model to remove the row correctly even if it's a child
         treeModel->removeRow(index.row(), index.parent());
         renderWindow->Render();
     }

@@ -12,7 +12,6 @@ public:
     explicit ModelPartList(const QString& data, QObject* parent = nullptr);
     ~ModelPartList();
 
-    // Standard Model Functions
     QVariant data(const QModelIndex& index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -20,11 +19,8 @@ public:
     QModelIndex parent(const QModelIndex& index) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-
-    // --- ADD THIS LINE HERE ---
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    // Helper Functions
     ModelPart* getRootItem();
     QModelIndex appendChild(QModelIndex& parent, const QList<QVariant>& data);
 
